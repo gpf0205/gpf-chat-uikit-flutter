@@ -28,8 +28,7 @@ class TIMUIKitHistoryMessageListContainer extends StatefulWidget {
   final Widget Function(BuildContext, V2TimMessage?)? itemBuilder;
   final AutoScrollController? scrollController;
   final String conversationID;
-  final Function(String? userId, String? nickName)?
-      onLongPressForOthersHeadPortrait;
+  final Function(String? userId, String? nickName)? onLongPressForOthersHeadPortrait;
   final List<V2TimGroupAtInfo?>? groupAtInfoList;
   final V2TimMessage? initFindingMsg;
 
@@ -40,14 +39,13 @@ class TIMUIKitHistoryMessageListContainer extends StatefulWidget {
   final TIMUIKitInputTextFieldController? textFieldController;
 
   /// the builder for avatar
-  final Widget Function(BuildContext context, V2TimMessage message)?
-      userAvatarBuilder;
+  final Widget Function(BuildContext context, V2TimMessage message)? userAvatarBuilder;
 
   /// the builder for tongue
   final TongueItemBuilder? tongueItemBuilder;
 
-  final Widget? Function(V2TimMessage message, Function() closeTooltip,
-      [Key? key, BuildContext? context])? extraTipsActionItemBuilder;
+  final Widget? Function(V2TimMessage message, Function() closeTooltip, [Key? key, BuildContext? context])?
+      extraTipsActionItemBuilder;
 
   /// conversation type
   final ConvType conversationType;
@@ -56,8 +54,7 @@ class TIMUIKitHistoryMessageListContainer extends StatefulWidget {
   final void Function(String userID, TapDownDetails tapDetails)? onTapAvatar;
 
   /// Avatar and name in message reaction secondary tap callback.
-  final void Function(String userID, TapDownDetails tapDetails)?
-      onSecondaryTapAvatar;
+  final void Function(String userID, TapDownDetails tapDetails)? onSecondaryTapAvatar;
 
   @Deprecated(
       "Nickname will not show in one-to-one chat, if you tend to control it in group chat, please use `isShowSelfNameInGroup` and `isShowOthersNameInGroup` from `config: TIMUIKitChatConfig` instead")
@@ -85,8 +82,13 @@ class TIMUIKitHistoryMessageListContainer extends StatefulWidget {
   /// If provided, the default message action functionality will appear in the right-click context menu instead.
   final Widget? Function(V2TimMessage message)? customMessageHoverBarOnDesktop;
 
+  final bool showTimeDivider;
+  final bool reverse;
+
   const TIMUIKitHistoryMessageListContainer({
     Key? key,
+    this.reverse = true,
+    this.showTimeDivider = true,
     this.itemBuilder,
     this.scrollController,
     required this.conversationID,
@@ -115,18 +117,15 @@ class TIMUIKitHistoryMessageListContainer extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() =>
-      _TIMUIKitHistoryMessageListContainerState();
+  State<StatefulWidget> createState() => _TIMUIKitHistoryMessageListContainerState();
 }
 
-class _TIMUIKitHistoryMessageListContainerState
-    extends TIMUIKitState<TIMUIKitHistoryMessageListContainer> {
+class _TIMUIKitHistoryMessageListContainerState extends TIMUIKitState<TIMUIKitHistoryMessageListContainer> {
   late TIMUIKitHistoryMessageListController _historyMessageListController;
 
   List<V2TimMessage?> historyMessageList = [];
 
-  Future<void> requestForData(String? lastMsgID, LoadDirection direction,
-      TUIChatSeparateViewModel model,
+  Future<void> requestForData(String? lastMsgID, LoadDirection direction, TUIChatSeparateViewModel model,
       [int? count]) async {
     if ((direction == LoadDirection.previous && model.haveMoreData) ||
         (direction == LoadDirection.latest && model.haveMoreLatestData)) {
@@ -137,12 +136,10 @@ class _TIMUIKitHistoryMessageListContainerState
     }
   }
 
-  Widget Function(BuildContext, V2TimMessage)? _getTopRowBuilder(
-      TUIChatSeparateViewModel model) {
+  Widget Function(BuildContext, V2TimMessage)? _getTopRowBuilder(TUIChatSeparateViewModel model) {
     if (widget.messageItemBuilder?.messageNickNameBuilder != null) {
       return (BuildContext context, V2TimMessage message) {
-        return widget.messageItemBuilder!.messageNickNameBuilder!(
-            context, message, model);
+        return widget.messageItemBuilder!.messageNickNameBuilder!(context, message, model);
       };
     }
     return null;
@@ -151,15 +148,13 @@ class _TIMUIKitHistoryMessageListContainerState
   @override
   void initState() {
     super.initState();
-    _historyMessageListController = TIMUIKitHistoryMessageListController(
-        scrollController: widget.scrollController);
+    _historyMessageListController = TIMUIKitHistoryMessageListController(scrollController: widget.scrollController);
   }
 
   @override
   Widget tuiBuild(BuildContext context, TUIKitBuildValue value) {
     final chatConfig = Provider.of<TIMUIKitChatConfig>(context);
-    final TUIChatSeparateViewModel model =
-        Provider.of<TUIChatSeparateViewModel>(context, listen: false);
+    final TUIChatSeparateViewModel model = Provider.of<TUIChatSeparateViewModel>(context, listen: false);
 
     return TIMUIKitHistoryMessageListSelector(
       conversationID: model.conversationID,
@@ -171,10 +166,11 @@ class _TIMUIKitHistoryMessageListContainerState
           controller: _historyMessageListController,
           groupAtInfoList: widget.groupAtInfoList,
           mainHistoryListConfig: widget.mainHistoryListConfig,
+          reverse: widget.reverse,
           itemBuilder: (context, message) {
             return TIMUIKitHistoryMessageListItem(
-                customMessageHoverBarOnDesktop:
-                    widget.customMessageHoverBarOnDesktop,
+                showTimeDivider: widget.showTimeDivider,
+                customMessageHoverBarOnDesktop: widget.customMessageHoverBarOnDesktop,
                 groupMemberInfo: widget.groupMemberInfo,
                 textFieldController: widget.textFieldController,
                 userAvatarBuilder: widget.userAvatarBuilder,
@@ -182,19 +178,15 @@ class _TIMUIKitHistoryMessageListContainerState
                 isUseDefaultEmoji: widget.isUseDefaultEmoji,
                 topRowBuilder: _getTopRowBuilder(model),
                 onScrollToIndex: _historyMessageListController.scrollToIndex,
-                onScrollToIndexBegin:
-                    _historyMessageListController.scrollToIndexBegin,
-                toolTipsConfig: widget.toolTipsConfig ??
-                    ToolTipsConfig(
-                        additionalItemBuilder:
-                            widget.extraTipsActionItemBuilder),
+                onScrollToIndexBegin: _historyMessageListController.scrollToIndexBegin,
+                toolTipsConfig:
+                    widget.toolTipsConfig ?? ToolTipsConfig(additionalItemBuilder: widget.extraTipsActionItemBuilder),
                 message: message!,
                 showAvatar: chatConfig.isShowAvatar,
                 onSecondaryTapForOthersPortrait: widget.onSecondaryTapAvatar,
                 onTapForOthersPortrait: widget.onTapAvatar,
                 messageItemBuilder: widget.messageItemBuilder,
-                onLongPressForOthersHeadPortrait:
-                    widget.onLongPressForOthersHeadPortrait,
+                onLongPressForOthersHeadPortrait: widget.onLongPressForOthersHeadPortrait,
                 allowAtUserWhenReply: chatConfig.isAtWhenReply,
                 allowAvatarTap: chatConfig.isAllowClickAvatar,
                 allowLongPress: chatConfig.isAllowLongPressMessage,
